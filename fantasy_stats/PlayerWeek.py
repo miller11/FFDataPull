@@ -6,6 +6,8 @@ import json
 
 
 # constants
+from util.BucketUpload import FileUtil
+
 FILES_DIR = os.path.join(os.path.dirname(__file__), '..', 'files')
 BASE_URL = 'https://fantasydata.com/NFL_FantasyStats/FantasyStats_Read'
 FILE_NAME = 'player_fantasy_week.csv'
@@ -17,7 +19,7 @@ class PlayerWeek:
         data_frames = []
 
         # Iterate each year and call ADP API
-        for year in range(int(os.getenv('START_YEAR', 1992)), int(os.getenv('END_YEAR', 2021))):
+        for year in range(int(os.getenv('START_YEAR', 1992)), int(os.getenv('END_YEAR', 2022))):
             params = {"filters.seasontype": "1", "filters.scope": "2", "filters.subscope": "1",
                       "filters.startweek": "1",
                       "filters.endweek": "17", "filters.aggregatescope": "1", "filters.range": "1",
@@ -46,8 +48,9 @@ class PlayerWeek:
 
         print('Player Fantasy Week file written')
 
-        # todo upload to bucket here
-        # print('Player Fantasy Week file uploaded to bucket')
+        # Upload to bucket here
+        FileUtil().upload_to_bucket(FILE_NAME, os.path.join(FILES_DIR, FILE_NAME), os.getenv('FANTASY_DATA_BUCKET', 'fantasy-year-data'))
+        print('Player Fantasy Week file uploaded to bucket')
 
         print('Player Fantasy Week processing complete')
 

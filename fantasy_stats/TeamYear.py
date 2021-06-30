@@ -6,6 +6,8 @@ import json
 
 
 # constants
+from util.BucketUpload import FileUtil
+
 FILES_DIR = os.path.join(os.path.dirname(__file__), '..', 'files')
 BASE_URL = 'https://fantasydata.com/NFL_TeamStats/TeamStats_Read'
 FILE_NAME = 'team_year.csv'
@@ -17,7 +19,7 @@ class TeamYear:
         data_frames = []
 
         # Iterate each year and call ADP API
-        for year in range(int(os.getenv('START_YEAR', 1992)), int(os.getenv('END_YEAR', 2020))):
+        for year in range(int(os.getenv('START_YEAR', 1992)), int(os.getenv('END_YEAR', 2022))):
             r = requests.post(BASE_URL, data={"filters.seasontype": "1", 'filters.season': year})
 
             # build dataframe and append year
@@ -39,8 +41,9 @@ class TeamYear:
 
         print('Team year written')
 
-        # todo upload to bucket here
-        # print('Team Year File uploaded to bucket')
+        # upload to bucket here
+        FileUtil().upload_to_bucket(FILE_NAME, os.path.join(FILES_DIR, FILE_NAME), os.getenv('FANTASY_DATA_BUCKET', 'fantasy-year-data'))
+        print('Team Year File uploaded to bucket')
 
         print('Team Year processing complete')
 
