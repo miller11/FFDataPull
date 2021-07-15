@@ -4,13 +4,14 @@ import pandas as pd
 import psutil
 import json
 
-
-# constants
+from util.BigQueryLoad import BigQueryLoad
 from util.BucketUpload import FileUtil
 
+# constants
 FILES_DIR = os.path.join(os.path.dirname(__file__), '..', 'files')
 BASE_URL = 'https://fantasydata.com/NFL_FantasyStats/FantasyStats_Read'
 FILE_NAME = 'player_fantasy_week.csv'
+BQ_DATASET = 'fantasydata'
 
 
 class PlayerWeek:
@@ -33,6 +34,8 @@ class PlayerWeek:
             if data_json['Total'] != 0:
                 df = pd.json_normalize(data_json['Data'])
                 df['year'] = year
+                df['GameDate'] = df['GameDate'].str.extract('.*\((.*)\).*')
+                df['GameDate'] = pd.to_datetime(df['GameDate'], unit='ms')
 
                 data_frames.append(df)
 
@@ -49,10 +52,12 @@ class PlayerWeek:
         print('Player Fantasy Week file written')
 
         # Upload to bucket here
-        FileUtil().upload_to_bucket(FILE_NAME, os.path.join(FILES_DIR, FILE_NAME), os.getenv('FANTASY_DATA_BUCKET', 'fantasy-year-data'))
+        FileUtil().upload_to_bucket(FILE_NAME, os.path.join(FILES_DIR, FILE_NAME),
+                                    os.getenv('FANTASY_DATA_BUCKET', 'fantasy-year-data'))
+
         print('Player Fantasy Week file uploaded to bucket')
 
+        # Load Big Query table
+        BigQueryLoad(BQ_DATASET).load_dataframe(FILE_NAME.replace('.csv', ''), df)
+
         print('Player Fantasy Week processing complete')
-
-
-

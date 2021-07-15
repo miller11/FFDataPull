@@ -4,12 +4,14 @@ import pandas as pd
 import psutil
 import json
 
-# constants
 from util.BucketUpload import FileUtil
+from util.BigQueryLoad import BigQueryLoad
 
+# constants
 FILES_DIR = os.path.join(os.path.dirname(__file__), '..', 'files')
 BASE_URL = 'https://fantasydata.com/NFL_Adp/ADP_Read'
 FILE_NAME = 'adp_year.csv'
+BQ_DATASET = 'fantasydata'
 
 
 class PlayerADP:
@@ -42,5 +44,8 @@ class PlayerADP:
         # upload to bucket here
         FileUtil().upload_to_bucket(FILE_NAME, os.path.join(FILES_DIR, FILE_NAME), os.getenv('FANTASY_DATA_BUCKET', 'fantasy-year-data'))
         print('ADP File uploaded to bucket')
+
+        # Load Big Query table
+        BigQueryLoad(BQ_DATASET).load_dataframe(FILE_NAME.replace('.csv', ''), df)
 
         print('ADP processing complete')
